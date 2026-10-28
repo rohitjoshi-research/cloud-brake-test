@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Interactive explainer: how far a Level 5 car travels while waiting for on-board, edge, cloud and blockchain answers.">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+<title>Cloud Brake Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one night-highway instrument panel — a log-scale "race" of five answer lanes, then tap-to-reveal facts and a one-question check. Deliberately single dark look. */
+:root{
+  --ink:#0D1317;        /* page ground: night asphalt */
+  --panel:#151D23;      /* instrument surface */
+  --lane:#1E2A32;       /* track fill */
+  --rule:#33444F;       /* dividers, ticks */
+  --fg:#E7EEF1;
+  --muted:#9AACB6;
+  --go:#38C6AB;         /* can act */
+  --warn:#F2B544;       /* can advise */
+  --stop:#FF6E4E;       /* can only record */
+  --go-soft:rgba(56,198,171,.16);
+  --stop-soft:rgba(255,110,78,.15);
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--ink);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+a{color:var(--go)}
+a:hover{color:var(--fg)}
+:focus-visible{outline:2px solid var(--warn);outline-offset:3px;border-radius:4px}
+
+header{display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.eyebrow b{color:var(--fg);font-weight:600;background:var(--lane);padding:3px 10px;border-radius:999px;margin-right:8px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(40px,7vw,76px);line-height:.95;letter-spacing:-.01em;margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--stop)}
+.lede{max-width:62ch;color:var(--muted);font-size:18px;margin:0}
+h2{font-family:var(--display);font-weight:700;font-size:34px;line-height:1;margin:0;letter-spacing:.005em}
+.h2sub{color:var(--muted);margin:6px 0 0;max-width:62ch}
+
+/* stage */
+.stage{background:var(--panel);border:1px solid var(--rule);border-radius:18px;padding:22px clamp(16px,3vw,28px) 24px;display:flex;flex-direction:column;gap:20px}
+.controls{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end}
+.ctl{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 200px}
+.ctl label{font-size:13px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono);display:flex;justify-content:space-between;gap:8px}
+.ctl output{color:var(--fg);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--warn);height:28px}
+.toggle{display:flex;align-items:center;gap:10px;flex:0 0 auto;font-size:15px;color:var(--fg);cursor:pointer;min-height:44px}
+.toggle input{width:20px;height:20px;accent-color:var(--stop)}
+.play{flex:0 0 auto;font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.04em;text-transform:uppercase;
+  background:var(--warn);color:#1A1406;border:0;border-radius:10px;padding:10px 22px;min-height:48px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.play:hover{filter:brightness(1.08)}
+.play svg{width:18px;height:18px}
+
+.readout{display:flex;flex-wrap:wrap;gap:12px 36px;align-items:baseline;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:14px 0}
+.readout div{display:flex;flex-direction:column}
+.readout span{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.readout strong{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+#clock{color:var(--warn)}
+
+.lanes{display:flex;flex-direction:column;gap:14px}
+.lane{display:grid;grid-template-columns:210px minmax(0,1fr);gap:16px;align-items:center}
+.lname{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.lname b{font-weight:600;font-size:16px}
+.lname small{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.track{position:relative;height:44px;background:var(--lane);border-radius:8px}
+.trail{position:absolute;left:0;top:0;bottom:0;border-radius:8px;width:0}
+.lane[data-c=go] .trail{background:linear-gradient(90deg,transparent,var(--go-soft) 40%,rgba(56,198,171,.35))}
+.lane[data-c=warn] .trail{background:linear-gradient(90deg,transparent,rgba(242,181,68,.14) 40%,rgba(242,181,68,.34))}
+.lane[data-c=stop] .trail{background:linear-gradient(90deg,transparent,var(--stop-soft) 40%,rgba(255,110,78,.34))}
+.car{position:absolute;top:50%;left:0;width:30px;height:16px;margin-left:-15px;margin-top:-8px;border-radius:5px;background:#D9E3E8}
+.car::after{content:"";position:absolute;right:3px;top:3px;width:7px;height:10px;border-radius:2px;background:#6F8592}
+.flag{position:absolute;top:50%;transform:translateY(-50%);left:0;margin-left:22px;white-space:nowrap;font-family:var(--mono);font-size:14px;font-weight:600;color:var(--fg);pointer-events:none}
+.flag i{font-style:normal;font-weight:400;color:var(--muted);margin-left:8px}
+.flag.left{margin-left:0;transform:translate(calc(-100% - 22px),-50%);text-align:right}
+.gap{position:absolute;top:-6px;bottom:-6px;width:0;border-left:2px dashed var(--stop)}
+.truck{position:absolute;top:50%;width:26px;height:30px;margin-top:-15px;border-radius:4px;background:#8A99A3;margin-left:2px}
+.truck::before,.truck::after{content:"";position:absolute;top:3px;width:6px;height:4px;border-radius:1px;background:var(--stop)}
+.truck::before{left:3px}.truck::after{right:3px}
+.braking .truck::before,.braking .truck::after{box-shadow:0 0 10px 3px var(--stop)}
+.v-ok{color:var(--go)}.v-late{color:var(--stop)}.v-none{color:var(--muted)}
+
+.axis{display:grid;grid-template-columns:210px minmax(0,1fr);gap:16px}
+.ticks{position:relative;height:22px;border-top:1px solid var(--rule)}
+.ticks span{position:absolute;top:4px;transform:translateX(-50%);font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.ticks span::before{content:"";position:absolute;left:50%;top:-9px;height:6px;border-left:1px solid var(--rule)}
+.axis-note{font-family:var(--mono);font-size:12px;color:var(--muted);align-self:start;padding-top:4px}
+.verdict{margin:0;font-size:18px;max-width:70ch}
+.verdict b{color:var(--warn)}
+
+/* roles */
+.roles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.role{background:var(--panel);border:1px solid var(--rule);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:2px}
+.role span{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.role strong{font-family:var(--display);font-size:32px;font-weight:700;line-height:1.1}
+.role:last-child{border-color:var(--stop)}
+.role:last-child strong{color:var(--stop)}
+.role:nth-child(2) strong{color:var(--go)}
+
+/* facts */
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.fact{position:relative;text-align:left;font:inherit;color:inherit;background:var(--panel);border:1px solid var(--rule);border-radius:14px;padding:18px 18px 16px;cursor:pointer;display:flex;flex-direction:column;gap:10px;min-height:190px;transition:border-color .2s,background .2s}
+.fact:hover{border-color:var(--muted)}
+.fact .q{font-size:17px;font-weight:500;line-height:1.35}
+.fact .a{display:none;font-size:15px;color:var(--fg)}
+.fact .a big{display:block;font-family:var(--display);font-weight:800;font-size:44px;line-height:1;color:var(--warn);margin-bottom:6px}
+.fact .src{display:none;font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:auto}
+.fact .hint{margin-top:auto;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--warn)}
+.fact[aria-expanded=true]{background:#18232A;border-color:var(--warn)}
+.fact[aria-expanded=true] .q{color:var(--muted);font-size:14px}
+.fact[aria-expanded=true] .a,.fact[aria-expanded=true] .src{display:block}
+.fact[aria-expanded=true] .hint{display:none}
+.score{font-family:var(--mono);font-size:13px;color:var(--muted)}
+
+/* quiz */
+.quiz{background:var(--panel);border:1px solid var(--rule);border-radius:18px;padding:22px clamp(16px,3vw,28px);display:flex;flex-direction:column;gap:14px}
+.quiz p.qq{font-size:20px;font-weight:500;margin:0;max-width:60ch}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opt{font:inherit;font-size:16px;color:var(--fg);background:var(--lane);border:1px solid var(--rule);border-radius:10px;padding:12px 16px;min-height:48px;text-align:left;cursor:pointer}
+.opt:hover{border-color:var(--muted)}
+.opt.right{border-color:var(--go);background:rgba(56,198,171,.14)}
+.opt.wrong{border-color:var(--stop);background:var(--stop-soft)}
+.feedback{margin:0;min-height:1.5em;max-width:66ch}
+
+footer{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--rule);padding-top:18px;font-size:14px;color:var(--muted)}
+footer ul{margin:0;padding-left:18px}
+
+@media (max-width:760px){
+  .lane,.axis{grid-template-columns:minmax(0,1fr);gap:6px}
+  .axis-note{display:none}
+  .roles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .facts{grid-template-columns:minmax(0,1fr)}
+  .fact{min-height:0}
+  .opts{grid-template-columns:minmax(0,1fr)}
+  .ticks span:nth-child(even){display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><b>L5 101</b>interactive · connected car</div>
+    <h1>Can the cloud <em>brake</em> in time?</h1>
+    <p class="lede">A truck ahead brakes hard. Your Level 5 car asks five layers for help: its own computer, the 5G edge, the cloud and a blockchain. Watch how far the car travels before each one answers.</p>
+  </header>
+
+  <section class="stage" aria-labelledby="race-h">
+    <h2 id="race-h" style="font-size:26px">The answer race</h2>
+    <div class="controls">
+      <div class="ctl">
+        <label for="speed">Speed <output id="speedOut" for="speed">130 km/h</output></label>
+        <input type="range" id="speed" min="30" max="200" step="10" value="130">
+      </div>
+      <div class="ctl">
+        <label for="gapIn">Truck ahead <output id="gapOut" for="gapIn">30 m</output></label>
+        <input type="range" id="gapIn" min="5" max="200" step="5" value="30">
+      </div>
+      <label class="toggle" for="nosig"><input type="checkbox" id="nosig"> Tunnel: no signal</label>
+      <button class="play" id="play" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2l11 6-11 6z" fill="currentColor"/></svg><span>Replay</span></button>
+    </div>
+
+    <div class="readout" aria-live="off">
+      <div><span>Waiting</span><strong id="clock">15:00</strong></div>
+      <div><span>Car has travelled</span><strong id="dist">32.5 km</strong></div>
+    </div>
+
+    <div class="lanes" id="lanes"></div>
+    <div class="axis"><div class="axis-note">distance travelled (log scale)</div><div class="ticks" id="ticks"></div></div>
+    <p class="verdict" id="verdict" aria-live="polite"></p>
+  </section>
+
+  <section aria-labelledby="roles-h" style="display:flex;flex-direction:column;gap:16px">
+    <div><h2 id="roles-h">The right job for each layer</h2><p class="h2sub">Speed decides the role. The faster the answer, the closer to the wheels it has to live.</p></div>
+    <div class="roles">
+      <div class="role"><span>IoT / sensors</span><strong>perceive</strong></div>
+      <div class="role"><span>on-board AI</span><strong>decide</strong></div>
+      <div class="role"><span>cloud</span><strong>learn</strong></div>
+      <div class="role"><span>blockchain</span><strong>prove</strong></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="facts-h" style="display:flex;flex-direction:column;gap:16px">
+    <div><h2 id="facts-h">Six facts. Guess first, then tap.</h2><p class="h2sub score" id="score">0 of 6 revealed</p></div>
+    <div class="facts" id="facts"></div>
+  </section>
+
+  <section class="quiz" aria-labelledby="quiz-h">
+    <h2 id="quiz-h" style="font-size:26px">Your call</h2>
+    <p class="qq">At 130 km/h a pedestrian steps out 20 m ahead. Which layer should trigger the brake?</p>
+    <div class="opts" id="opts"></div>
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+  </section>
+
+  <footer>
+    <div>Distance = speed × waiting time. Edge and central-cloud latencies are typical values for illustration, not guarantees. Created by Rohit Joshi.</div>
+    <ul>
+      <li><a href="https://itecspec.com/3gpp/38.885/s/11.1" target="_blank" rel="noopener">3GPP TR 38.885 §11.1 · 5 ms end-to-end for remote driving</a></li>
+      <li><a href="https://ethereum.org/roadmap/single-slot-finality/" target="_blank" rel="noopener">ethereum.org · about 15 minutes to finality</a></li>
+      <li><a href="https://www.arxiv.org/abs/2201.06082" target="_blank" rel="noopener">Coll-Perales et al. · End-to-end V2X latency in 5G networks</a></li>
+    </ul>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var LAYERS=[
+    {name:'On-board + V2X',ms:5,lat:'≤ 5 ms',c:'go',net:false},
+    {name:'Edge cloud (5G MEC)',ms:20,lat:'~ 20 ms',c:'go',net:true},
+    {name:'Central cloud',ms:100,lat:'~ 100 ms',c:'warn',net:true},
+    {name:'Blockchain · new block',ms:12000,lat:'~ 12 s',c:'stop',net:true},
+    {name:'Blockchain · finality',ms:900000,lat:'~ 15 min',c:'stop',net:true}
+  ];
+  var MIN=-2, SPAN=7;                 // 1 cm .. 100 km
+  var DUR=9000, TMAX_LOG=6;          // animate 1 ms .. 1000 s on a log clock
+  var $=function(id){return document.getElementById(id)};
+  var speed=$('speed'), gapIn=$('gapIn'), nosig=$('nosig');
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function pos(d){ if(d<=0.01) return 0; var p=(Math.log10(d)-MIN)/SPAN*100; return Math.max(0,Math.min(100,p)); }
+  function fmtD(d){ if(d<1) return d.toFixed(2)+' m'; if(d<10) return d.toFixed(1)+' m'; if(d<1000) return Math.round(d)+' m'; return (d/1000).toFixed(1)+' km'; }
+  function fmtT(ms){ if(ms<1000) return Math.round(ms)+' ms'; if(ms<60000) return (ms/1000).toFixed(1)+' s'; var s=Math.round(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+
+  // build lanes
+  var lanesEl=$('lanes'), rows=[];
+  LAYERS.forEach(function(L){
+    var lane=document.createElement('div'); lane.className='lane'; lane.dataset.c=L.c;
+    lane.innerHTML='<div class="lname"><b></b><small></small></div><div class="track"><div class="trail"></div><div class="gap" aria-hidden="true"></div><div class="truck" aria-hidden="true"></div><div class="car" aria-hidden="true"></div><div class="flag"></div></div>';
+    lane.querySelector('b').textContent=L.name; lane.querySelector('small').textContent=L.lat;
+    lanesEl.appendChild(lane);
+    rows.push({L:L,el:lane,trail:lane.querySelector('.trail'),car:lane.querySelector('.car'),flag:lane.querySelector('.flag'),gap:lane.querySelector('.gap'),truck:lane.querySelector('.truck'),track:lane.querySelector('.track')});
+  });
+  var ticks=$('ticks');
+  [['1 cm',.01],['10 cm',.1],['1 m',1],['10 m',10],['100 m',100],['1 km',1000],['10 km',1e4],['100 km',1e5]].forEach(function(t){
+    var s=document.createElement('span'); s.textContent=t[0]; s.style.left=pos(t[1])+'%'; if(t[1]===.01) s.style.transform='none'; if(t[1]===1e5) s.style.transform='translateX(-100%)'; ticks.appendChild(s);
+  });
+
+  function v(){ return Number(speed.value)/3.6; }   // m/s
+  function gap(){ return Number(gapIn.value); }
+
+  function render(tms){
+    var vv=v(), g=gap(), gp=pos(g), sig=!nosig.checked, ok=0;
+    $('clock').textContent=fmtT(tms);
+    $('dist').textContent=fmtD(vv*tms/1000);
+    rows.forEach(function(r){
+      var L=r.L, blocked=L.net&&!sig, arrived=!blocked&&tms>=L.ms;
+      var elapsed=blocked?tms:Math.min(tms,L.ms), d=vv*elapsed/1000, p=pos(d);
+      r.trail.style.width=p+'%'; r.car.style.left=p+'%';
+      r.gap.style.left=gp+'%'; r.truck.style.left=gp+'%';
+      r.el.classList.toggle('braking',true);
+      var html;
+      if(arrived){ var inT=d<=g; if(inT) ok++; html=fmtD(d)+'<i class="'+(inT?'v-ok':'v-late')+'">'+(inT?'✓ answered in time':'✕ truck already reached')+'</i>'; }
+      else if(blocked){ html=fmtD(d)+'<i class="v-none">no signal · waiting…</i>'; }
+      else { html=fmtD(d)+'<i class="v-none">waiting…</i>'; }
+      r.flag.innerHTML=html;
+      r.flag.style.left=p+'%';
+      r.flag.classList.toggle('left',p>58);
+    });
+    return ok;
+  }
+
+  function summary(ok){
+    var sig=!nosig.checked;
+    var s='At <b>'+speed.value+' km/h</b> with the truck <b>'+gap()+' m</b> ahead, <b>'+ok+' of 5</b> layers answer before the car reaches it. ';
+    s+= sig ? 'Only the on-board layer works without a radio link, and with no driver to take over, a Level 5 car has to bet on that one.' : 'In the tunnel only the on-board layer answers at all. That is the one a Level 5 car must be able to trust alone.';
+    $('verdict').innerHTML=s;
+  }
+
+  var raf=null;
+  function finish(){ summary(render(Math.pow(10,TMAX_LOG))); }
+  function play(){
+    if(raf) cancelAnimationFrame(raf);
+    $('play').querySelector('span').textContent='Replay';
+    if(reduce){ finish(); return; }
+    $('verdict').textContent='The clock runs on a log scale: each second of animation is roughly ten times longer than the last.';
+    var t0=null;
+    function step(ts){
+      if(t0===null) t0=ts;
+      var p=Math.min(1,(ts-t0)/DUR);
+      render(Math.pow(10,p*TMAX_LOG));
+      if(p<1) raf=requestAnimationFrame(step); else { raf=null; finish(); }
+    }
+    raf=requestAnimationFrame(step);
+  }
+  $('play').addEventListener('click',play);
+  function onInput(){
+    $('speedOut').textContent=speed.value+' km/h'; $('gapOut').textContent=gapIn.value+' m';
+    if(!raf) finish();
+  }
+  [speed,gapIn].forEach(function(e){e.addEventListener('input',onInput)});
+  nosig.addEventListener('change',onInput);
+
+  finish();
+  if(!reduce) setTimeout(play,900);
+
+  // facts
+  var FACTS=[
+    {q:'A car at 130 km/h covers how far in one second?',big:'36 m',a:'Every number here is that speed multiplied by the waiting time.',src:'d = v × t'},
+    {q:'What end-to-end latency does 3GPP set for remote driving?',big:'5 ms',a:'At 130 km/h the car moves about 18 cm in that time.',src:'3GPP TR 38.885 §11.1'},
+    {q:'How long until an Ethereum block is final?',big:'~15 min',a:'About 32 km at highway speed. A ledger can prove what happened; it can’t steer.',src:'ethereum.org'},
+    {q:'What does Level 5 take away that Level 2 still has?',big:'The fallback',a:'Level 5 drives everywhere, in all conditions, with no human expected to take over.',src:'SAE J3016 levels of automation'},
+    {q:'Why move servers to the network edge?',big:'Shorter path',a:'5G V2X studies find a central cloud server is a latency bottleneck; servers near the cell cut the delay.',src:'Coll-Perales et al., IEEE TVT'},
+    {q:'So where does blockchain actually help a car?',big:'After the fact',a:'Tamper-evident crash logs, proof of which software was installed, and a record of who was in control.',src:'design principle'}
+  ];
+  var factsEl=$('facts'), seen=0;
+  FACTS.forEach(function(f,i){
+    var b=document.createElement('button'); b.type='button'; b.className='fact'; b.id='fact'+i; b.setAttribute('aria-expanded','false');
+    b.innerHTML='<span class="q"></span><span class="a"><big></big><span class="at"></span></span><span class="src"></span><span class="hint">Tap to reveal</span>';
+    b.querySelector('.q').textContent=f.q; b.querySelector('big').textContent=f.big; b.querySelector('.at').textContent=f.a; b.querySelector('.src').textContent='Source · '+f.src;
+    b.addEventListener('click',function(){
+      var open=b.getAttribute('aria-expanded')==='true';
+      if(!open && !b.dataset.seen){ b.dataset.seen='1'; seen++; $('score').textContent=seen+' of 6 revealed'+(seen===6?' · nicely done':''); }
+      b.setAttribute('aria-expanded',open?'false':'true');
+    });
+    factsEl.appendChild(b);
+  });
+
+  // quiz
+  var OPTS=[
+    {t:'On-board AI',ok:true,fb:'Right. The edge might answer within a metre on a good day, but a car with no driver can’t bet its brakes on a radio link.'},
+    {t:'Edge cloud (5G MEC)',ok:false,fb:'Fast enough on paper (about 0.7 m), but only while the signal holds. Use it to warn, not to brake.'},
+    {t:'Central cloud',ok:false,fb:'About 3.6 m of travel before it even replies, and nothing at all in a tunnel. The cloud learns; it doesn’t brake.'},
+    {t:'Blockchain',ok:false,fb:'A new block takes about 12 s, roughly 430 m. The ledger is where you prove the brake happened.'}
+  ];
+  var optsEl=$('opts');
+  OPTS.forEach(function(o,i){
+    var b=document.createElement('button'); b.type='button'; b.className='opt'; b.id='opt'+i; b.textContent=o.t;
+    b.addEventListener('click',function(){
+      Array.prototype.forEach.call(optsEl.children,function(c){c.classList.remove('right','wrong')});
+      b.classList.add(o.ok?'right':'wrong');
+      if(!o.ok) optsEl.children[0].classList.add('right');
+      $('feedback').textContent=o.fb;
+    });
+    optsEl.appendChild(b);
+  });
+})();
+</script>
+</body>
+</html>
